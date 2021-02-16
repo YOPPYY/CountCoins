@@ -311,6 +311,7 @@ phina.define('Main', {
 
       gauge2.onempty = function(){
         clearInterval(countdown);
+        input = -1;
         self.exit("result");
       };
 
@@ -338,7 +339,8 @@ phina.define('Result', {
     var text="";
 
     if(ans==input){
-      result="Tap to Next Level";
+      result1="正解！";
+      result2="Tap to Next Level";
       text ="次へ";
       level++;
       clear++;
@@ -348,8 +350,10 @@ phina.define('Result', {
     }
 
     if(ans!=input){
-      result="ゲームオーバー";
-      result2="スコア："+score;
+      if(input==-1){result1="時間切れ！";}
+      else{ result1="不正解！";}
+      result2="ゲームオーバー";
+      result3="スコア："+score;
       text= "タイトルへ";
       next = "title";
       var mark="batsu";
@@ -363,13 +367,17 @@ phina.define('Result', {
     this.label.y = this.gridY.center()-48; // y 座標
     this.label.fill = 'white'; // 塗りつぶし色
 
+    this.label = Label({text:result1,fontSize:48}).addChildTo(this);
+    this.label.x = this.gridX.center(); // x 座標
+    this.label.y = 75; // y 座標
+    this.label.fill = 'white'; // 塗りつぶし色
 
-    this.label = Label({text:result,fontSize:48}).addChildTo(this);
+    this.label = Label({text:result2,fontSize:48}).addChildTo(this);
     this.label.x = this.gridX.center(); // x 座標
     this.label.y = this.gridY.center()+48; // y 座標
     this.label.fill = 'white'; // 塗りつぶし色
 
-    this.label = Label({text:result2,fontSize:32}).addChildTo(this);
+    this.label = Label({text:result3,fontSize:32}).addChildTo(this);
     this.label.x = this.gridX.center(); // x 座標
     this.label.y = this.gridY.center()+96; // y 座標
     this.label.fill = 'white'; // 塗りつぶし色
