@@ -4,12 +4,6 @@ phina.globalize();
 var SCREEN_WIDTH = 640;
 var SCREEN_HEIGHT = 960;
 
-var GRID_SIZE = SCREEN_WIDTH / 4;  // グリッドのサイズ
-var PIECE_SIZE = GRID_SIZE * 0.95; // ピースの大きさ
-var PIECE_NUM_XY = 4;              // 縦横のピース数
-var PIECE_OFFSET = GRID_SIZE / 2;  // オフセット値
-
-
 var x=[];
 var y=[];
 
@@ -27,8 +21,11 @@ var input = 0;
 var startlevel=5;
 var level;
 var speed = 0.5;
+//var scale = 0.2;
 
 var clear=0;
+
+var up=true;
 
 var ASSETS = {
   image: {
@@ -42,7 +39,8 @@ var ASSETS = {
     'batsu': 'img/mark_batsu.png',
   },
   sound: {
-    'bgm': 'sound/bgm.mp3',
+    'bgm1': 'sound/bgm1.mp3',
+    'bgm2': 'sound/bgm2.mp3',
     'timer': 'sound/timer.mp3',
     'button': 'sound/button.mp3',
     'maru': 'sound/maru.mp3',
@@ -57,7 +55,7 @@ phina.define('Title', {
   init: function() {
     this.superInit();
     var self=this;
-    SoundManager.playMusic('bgm');
+    SoundManager.playMusic('bgm1');
 
     // 背景色を指定
     this.backgroundColor = '#444';
@@ -84,8 +82,8 @@ phina.define('Title', {
     var button = Button({
       x: 320,             // x座標
       y: 120,             // y座標
-      width: 320,         // 横サイズ
-      height: 80,        // 縦サイズ
+      width: 240,         // 横サイズ
+      height: 120,        // 縦サイズ
       text: "設定",     // 表示文字
       fontSize: 48,       // 文字サイズ
       fontColor: 'black', // 文字色
@@ -95,6 +93,7 @@ phina.define('Title', {
       strokeWidth: 5,     // 枠太さ
     }).addChildTo(this)
     .onpointstart = function() {
+      SoundManager.play('button');
       self.exit("setting");
     };
 
@@ -138,7 +137,6 @@ phina.define('Title', {
   },
 
   onpointstart: function() {
-    SoundManager.stopMusic('bgm');
     level=startlevel;
     this.exit("main");
   },
@@ -168,7 +166,7 @@ phina.define('Setting', {
     }).addChildTo(this);
 
     this.label = Label({
-      text:'Level',
+      text:'Level\n(1-20)',
       fontSize: 32,
       x:this.gridX.center(),
       y:240-64,
@@ -178,7 +176,7 @@ phina.define('Setting', {
     }).addChildTo(this);
 
     this.label = Label({
-      text:'Speed',
+      text:'Speed\n(0.0-2.0)',
       fontSize: 32,
       x:this.gridX.center(),
       y:480-64,
@@ -187,8 +185,18 @@ phina.define('Setting', {
       strokeWidth:5,
     }).addChildTo(this);
 
-    var label1 = Label({x:320,y:240,fontSize:64,fill:'white',text:startlevel}).addChildTo(this);
-    var label2 = Label({x:320,y:480,fontSize:64,fill:'white',text:speed}).addChildTo(this);
+    this.label = Label({
+      text:'レベル固定モード',
+      fontSize: 42,
+      x:SCREEN_WIDTH/3+20,
+      y:SCREEN_HEIGHT*2/3,
+      fill:'white',
+      stroke:'black',
+      strokeWidth:5,
+    }).addChildTo(this);
+
+    var label1 = Label({x:320,y:240+16,fontSize:64,fill:'white',text:startlevel}).addChildTo(this);
+    var label2 = Label({x:320,y:480+16,fontSize:64,fill:'white',text:speed}).addChildTo(this);
 
     var button = Button({
       x: 320,             // x座標
@@ -207,9 +215,9 @@ phina.define('Setting', {
       self.exit("title");
     };
 
-    var button = Button({
-      x: 160,             // x座標
-      y: 240,             // y座標
+    var button1 = Button({
+      x: 160-10,             // x座標
+      y: 240-10,             // y座標
       width: 160,         // 横サイズ
       height: 160,        // 縦サイズ
       text: "-",     // 表示文字
@@ -223,11 +231,12 @@ phina.define('Setting', {
     .onpointstart = function() {
       if(startlevel>1){startlevel--;}
       label1.text=startlevel;
+      SoundManager.play("button");
     };
 
-    var button = Button({
-      x: 480,             // x座標
-      y: 240,             // y座標
+    var button2 = Button({
+      x: 480+10,             // x座標
+      y: 240-10,             // y座標
       width: 160,         // 横サイズ
       height: 160,        // 縦サイズ
       text: "+",     // 表示文字
@@ -241,11 +250,12 @@ phina.define('Setting', {
     .onpointstart = function() {
       if(startlevel<30){startlevel++;}
       label1.text=startlevel;
+      SoundManager.play("button");
     };
 
-    var button = Button({
-      x: 160,             // x座標
-      y: 480,             // y座標
+    var button3 = Button({
+      x: 160-10,             // x座標
+      y: 480-10,             // y座標
       width: 160,         // 横サイズ
       height: 160,        // 縦サイズ
       text: "-",     // 表示文字
@@ -257,13 +267,15 @@ phina.define('Setting', {
       strokeWidth: 5,     // 枠太さ
     }).addChildTo(this)
     .onpointstart = function() {
-      if(speed>0.1){speed-=0.1;}
-      label2.text=speed;
+      if(speed>0){speed-=0.1;}
+      speed = Math.round(speed*10)/10;
+      label2.text=speed.toFixed(1);
+      SoundManager.play("button");
     };
 
-    var button = Button({
-      x: 480,             // x座標
-      y: 480,             // y座標
+    var button4 = Button({
+      x: 480+10,             // x座標
+      y: 480-10,             // y座標
       width: 160,         // 横サイズ
       height: 160,        // 縦サイズ
       text: "+",     // 表示文字
@@ -275,8 +287,33 @@ phina.define('Setting', {
       strokeWidth: 5,     // 枠太さ
     }).addChildTo(this)
     .onpointstart = function() {
-      if(speed<1){speed+=0.1;}
-      label2.text=speed;
+      if(speed<2){speed+=0.1;}
+      speed = Math.round(speed*10)/10;
+      label2.text=speed.toFixed(1);
+      SoundManager.play("button");
+    };
+
+    var button = Button({
+      x: 480+10,             // x座標
+      y: SCREEN_HEIGHT*2/3,             // y座標
+      width: 100,         // 横サイズ
+      height: 100,        // 縦サイズ
+      text: "□",     // 表示文字
+      fontSize: 48,       // 文字サイズ
+      fontColor: 'black', // 文字色
+      cornerRadius: 10,   // 角丸み
+      fill: 'lightgray',    // ボタン色
+      stroke: 'black',     // 枠色
+      strokeWidth: 5,     // 枠太さ
+    }).addChildTo(this)
+    .onpointstart = function() {
+      up = !up;
+      if(up){
+          this.text="□";
+      }
+      else{
+        this.text="☑";
+      }
     };
 
   },
@@ -289,18 +326,19 @@ phina.define('Main', {
     this.superInit();
     var self=this;
     var val=[];
+
     // 背景色を指定
     this.backgroundColor = '#444';
-    // ラベルを生成
-    this.label = Label('How Much?').addChildTo(this);
-    this.label.x = this.gridX.center(); // x 座標
-    this.label.y = this.gridY.center()-50; // y 座標
-    this.label.fill = 'white'; // 塗りつぶし色
 
-    SoundManager.playMusic('timer');
+    var how = Label({x:320,y:this.gridY.center()-50,fontSize:32,fill:'white',text:'How Much?'}).addChildTo(this);
+    var howtime=15;
+
+    SoundManager.playMusic("bgm2");
+
     ans = 0;
 
-    time = 150 + (level-5)*30*0.5; // level * fps
+    time = level *30;
+    //time = 150 + (level-5)*30*0.5; // level * fps
 
     var gauge = Gauge({
       x: SCREEN_WIDTH/2, y: SCREEN_HEIGHT-15,        // x,y座標
@@ -321,6 +359,13 @@ phina.define('Main', {
     gauge.update=function(){
       gauge.value --;
       label.text= (Math.floor(gauge.value/30*10)/10).toFixed(1) ;
+
+      if(howtime==0){
+        how.text="";
+      }
+      else{
+        howtime--;
+      }
     }
 
 
@@ -339,7 +384,7 @@ phina.define('Main', {
     }
     val.sort();
     val.reverse();
-    console.log(val);
+
     for(var n in val){
       var angle = Math.floor( Math.random() * 360 );
       var sprite = Sprite(coins[val[n]]).addChildTo(group)
@@ -352,15 +397,12 @@ phina.define('Main', {
         ans += price[val[n]];
       }
 
-      this.label = Label(ans).addChildTo(this);
-      this.label.x = this.gridX.center(); // x 座標
-      this.label.y = this.gridY.center()+50; // y 座標
-      this.label.fill = 'white'; // 塗りつぶし色
+      console.log(ans+'円');
+
 
       group.update= function(){
         for(i=0;i<group.children.length;i++){
           group.children[i].moveBy(x[i]*speed, y[i]*speed);
-
 
           //console.log(coin.x +", "+coin.y);
           if (group.children[i].x < 0+group.children[i].width*0.1 || group.children[i].x>SCREEN_WIDTH-group.children[i].width*0.1) {
@@ -370,9 +412,9 @@ phina.define('Main', {
           if (group.children[i].y < 0+group.children[i].height*0.1 || group.children[i].y>SCREEN_HEIGHT-group.children[i].height*0.1-30) {
             y[i] *= -1;
           }
-
         }
       }
+
     },
 
     onpointstart: function() {
@@ -389,7 +431,8 @@ phina.define('Main', {
       // 親クラス初期化
       this.superInit();
       var self=this;
-      SoundManager.stopMusic("timer");
+      SoundManager.pauseMusic("bgm2");
+      SoundManager.playMusic('timer');
       // 背景色を指定
       this.backgroundColor = '#444';
       // ラベルを生成
@@ -435,6 +478,8 @@ phina.define('Main', {
       }).addChildTo(piecegroup)
       .onpointstart = function() {
 
+        SoundManager.stopMusic("timer");
+
         clearInterval(countdown);
         self.exit("result");
 
@@ -459,8 +504,6 @@ phina.define('Main', {
         if(input < 10){input = 0;}
         else{input = Math.floor(input * 0.1);}
         label.text = input;
-
-        console.log(this.text);
       };
 
       //ボタン0
@@ -483,7 +526,6 @@ phina.define('Main', {
         else{input = input * 10 + this.text;}
         label.text = input;
 
-        console.log(this.text);
       };
 
       //ボタン1-9
@@ -509,7 +551,7 @@ phina.define('Main', {
           else{input = input * 10 + this.text;}
           label.text = input;
 
-          console.log(this.text);
+          console.log(input);
         };
       }
 
@@ -521,6 +563,7 @@ phina.define('Main', {
       gauge2.onempty = function(){
         clearInterval(countdown);
         input = -1;
+        SoundManager.stopMusic("timer");
         self.exit("result");
       };
 
@@ -555,7 +598,7 @@ phina.define('Result', {
       result1="正解！";
       result2="Go to Next Level!";
       text ="次へ";
-      level++;
+      if(up){level++;}
       clear++;
       next = "main";
       score += ans;
@@ -622,6 +665,12 @@ phina.define('Result', {
       // 他にも指定できる…？
     }).addChildTo(this)
     .onpointstart = function() {
+      if (next=="main"){
+
+      }
+
+      if (next=="title"){
+      }
 
       self.exit(next);
     };
