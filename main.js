@@ -23,6 +23,8 @@ var level;
 var speed = 0.5;
 //var scale = 0.2;
 
+var addpoint=0;
+
 var clear=0;
 
 var up=true;
@@ -309,11 +311,12 @@ phina.define('Setting', {
     .onpointstart = function() {
       up = !up;
       if(up){
-          this.text="□";
+        this.text="□";
       }
       else{
         this.text="☑";
       }
+      SoundManager.play("button");
     };
 
   },
@@ -355,164 +358,199 @@ phina.define('Main', {
 
     var label = Label({x:320,y:SCREEN_HEIGHT-16,fontSize:32,fill:'black',text:time}).addChildTo(this);
 
+    how.update=function(){
+      if(how.alpha>0){
+        how.alpha = how.alpha- 0.03;
+      }
+            if(how.alpha<=0){
+              how.alpha=0;
+            }
+    }
+
 
     gauge.update=function(){
       gauge.value --;
       label.text= (Math.floor(gauge.value/30*10)/10).toFixed(1) ;
 
+      /*
       if(howtime==0){
-        how.text="";
+      how.text="";
+    }
+    else{
+    howtime--;
+  }*/
+}
+
+
+gauge.onempty = function(){
+  clearInterval(countdown);
+  self.exit();
+};
+
+var group = DisplayElement().addChildTo(this);
+
+
+for(var i=0; i<level; i++){
+  var r = Math.floor( Math.random() * coins.length );
+
+  val.push(r);
+}
+val.sort();
+val.reverse();
+
+for(var n in val){
+  var angle = Math.floor( Math.random() * 360 );
+  var sprite = Sprite(coins[val[n]]).addChildTo(group)
+  .setPosition(
+    55+Math.floor(Math.random() * (SCREEN_WIDTH-110)),
+    55+Math.floor(Math.random() * (SCREEN_HEIGHT-110-30)))
+    .setScale(0.2);
+    x[n] = 10 * Math.cos( angle * (Math.PI / 180) ) ;
+    y[n] = 10 * Math.sin( angle * (Math.PI / 180) ) ;
+    ans += price[val[n]];
+    console.log(sprite.width);
+  }
+
+  console.log(ans+'円');
+
+
+  group.update= function(){
+    for(i=0;i<group.children.length;i++){
+      group.children[i].moveBy(x[i]*speed, y[i]*speed);
+
+      if (group.children[i].x < 0+group.children[i].width*0.1 || group.children[i].x>SCREEN_WIDTH-group.children[i].width*0.1) {
+        x[i] *= -1;
       }
-      else{
-        howtime--;
+
+      if (group.children[i].y < 0+group.children[i].height*0.1 || group.children[i].y>SCREEN_HEIGHT-group.children[i].height*0.1-30) {
+        y[i] *= -1;
       }
     }
+  }
+
+},
+
+onpointstart: function() {
+  clearInterval(countdown);
+  this.exit();
+},
+
+});
+
+// Result クラスを定義
+phina.define('Answer', {
+  superClass: 'CanvasScene',
+  init: function() {
+    // 親クラス初期化
+    this.superInit();
+    var self=this;
+    SoundManager.pauseMusic("bgm2");
+    SoundManager.playMusic('timer');
+    // 背景色を指定
+    this.backgroundColor = '#444';
+    // ラベルを生成
+    this.label = Label('答えを入力').addChildTo(this);
+    this.label.x = this.gridX.center(); // x 座標
+    this.label.y = 75; // y 座標
+    this.label.fill = 'white'; // 塗りつぶし色
 
 
-    gauge.onempty = function(){
+    input=0;
+
+    var label = Label({x:320,y:150,fontSize:64,fill:'white',text:input}).addChildTo(this);
+
+
+    var gauge2 = Gauge({
+      x: SCREEN_WIDTH/2, y: SCREEN_HEIGHT-15,        // x,y座標
+      width: SCREEN_WIDTH,            // 横サイズ
+      height: 30,            // 縦サイズ
+      cornerRadius: 0,      // 角丸み
+      maxValue: 150,         // ゲージ最大値
+      value: 150,         // ゲージ初期値
+      fill: 'white',         // 後ろの色
+      gaugeColor: 'skyblue', // ゲージ色
+      stroke: 'silver',      // 枠色
+      strokeWidth: 5,        // 枠太さ
+    }).addChildTo(this);
+
+    var piecegroup = DisplayElement().addChildTo(this);
+
+    //ボタンOK
+    var button = Button({
+      x: 320+175,             // x座標
+      y: 480+350,             // y座標
+      width: 160,         // 横サイズ
+      height: 160,        // 縦サイズ
+      text: "OK",     // 表示文字
+      fontSize: 48,       // 文字サイズ
+      fontColor: 'red', // 文字色
+      cornerRadius: 10,   // 角丸み
+      fill: "lightsalmon",    // ボタン色
+      stroke: 'red',     // 枠色
+      strokeWidth: 5,     // 枠太さ
+    }).addChildTo(piecegroup)
+    .onpointstart = function() {
+
+      SoundManager.stopMusic("timer");
+
       clearInterval(countdown);
-      self.exit();
+      self.exit("result");
+
     };
 
-    var group = DisplayElement().addChildTo(this);
+    //ボタンBACK
+    var button = Button({
+      x: 320-175,             // x座標
+      y: 480+350,             // y座標
+      width: 160,         // 横サイズ
+      height: 160,        // 縦サイズ
+      text: "←",     // 表示文字
+      fontSize: 48,       // 文字サイズ
+      fontColor: 'black', // 文字色
+      cornerRadius: 10,   // 角丸み
+      fill: 'lightgray',    // ボタン色
+      stroke: 'black',     // 枠色
+      strokeWidth: 5,     // 枠太さ
+    }).addChildTo(piecegroup)
+    .onpointstart = function() {
+      SoundManager.play("button");
+      if(input < 10){input = 0;}
+      else{input = Math.floor(input * 0.1);}
+      label.text = input;
+    };
 
+    //ボタン0
+    var button = Button({
+      x: 320,             // x座標
+      y: 480+350,             // y座標
+      width: 160,         // 横サイズ
+      height: 160,        // 縦サイズ
+      text: 0,     // 表示文字
+      fontSize: 48,       // 文字サイズ
+      fontColor: 'blue', // 文字色
+      cornerRadius: 10,   // 角丸み
+      fill: 'skyblue',    // ボタン色
+      stroke: 'blue',     // 枠色
+      strokeWidth: 5,     // 枠太さ
+    }).addChildTo(piecegroup)
+    .onpointstart = function() {
+      SoundManager.play("button");
+      if(input==0){input=this.text;}
+      else{input = input * 10 + this.text;}
+      label.text = input;
 
-    for(var i=0; i<level; i++){
-      var r = Math.floor( Math.random() * coins.length );
+    };
 
-      val.push(r);
-    }
-    val.sort();
-    val.reverse();
-
-    for(var n in val){
-      var angle = Math.floor( Math.random() * 360 );
-      var sprite = Sprite(coins[val[n]]).addChildTo(group)
-      .setPosition(
-        100+Math.floor(Math.random() * (SCREEN_WIDTH-200)),
-        100+Math.floor(Math.random() * (SCREEN_HEIGHT-200)))
-        .setScale(0.2);
-        x[n] = 10 * Math.cos( angle * (Math.PI / 180) ) ;
-        y[n] = 10 * Math.sin( angle * (Math.PI / 180) ) ;
-        ans += price[val[n]];
-      }
-
-      console.log(ans+'円');
-
-
-      group.update= function(){
-        for(i=0;i<group.children.length;i++){
-          group.children[i].moveBy(x[i]*speed, y[i]*speed);
-
-          //console.log(coin.x +", "+coin.y);
-          if (group.children[i].x < 0+group.children[i].width*0.1 || group.children[i].x>SCREEN_WIDTH-group.children[i].width*0.1) {
-            x[i] *= -1;
-          }
-
-          if (group.children[i].y < 0+group.children[i].height*0.1 || group.children[i].y>SCREEN_HEIGHT-group.children[i].height*0.1-30) {
-            y[i] *= -1;
-          }
-        }
-      }
-
-    },
-
-    onpointstart: function() {
-      clearInterval(countdown);
-      this.exit();
-    },
-
-  });
-
-  // Result クラスを定義
-  phina.define('Answer', {
-    superClass: 'CanvasScene',
-    init: function() {
-      // 親クラス初期化
-      this.superInit();
-      var self=this;
-      SoundManager.pauseMusic("bgm2");
-      SoundManager.playMusic('timer');
-      // 背景色を指定
-      this.backgroundColor = '#444';
-      // ラベルを生成
-      this.label = Label('答えを入力').addChildTo(this);
-      this.label.x = this.gridX.center(); // x 座標
-      this.label.y = 75; // y 座標
-      this.label.fill = 'white'; // 塗りつぶし色
-
-
-      input=0;
-
-      var label = Label({x:320,y:150,fontSize:64,fill:'white',text:input}).addChildTo(this);
-
-
-      var gauge2 = Gauge({
-        x: SCREEN_WIDTH/2, y: SCREEN_HEIGHT-15,        // x,y座標
-        width: SCREEN_WIDTH,            // 横サイズ
-        height: 30,            // 縦サイズ
-        cornerRadius: 0,      // 角丸み
-        maxValue: 150,         // ゲージ最大値
-        value: 150,         // ゲージ初期値
-        fill: 'white',         // 後ろの色
-        gaugeColor: 'skyblue', // ゲージ色
-        stroke: 'silver',      // 枠色
-        strokeWidth: 5,        // 枠太さ
-      }).addChildTo(this);
-
-      var piecegroup = DisplayElement().addChildTo(this);
-
-      //ボタンOK
+    //ボタン1-9
+    for(var n=0;n<9;n++){
+      var i= Math.floor(n/3);
+      var j= n%3;
       var button = Button({
-        x: 320+175,             // x座標
-        y: 480+350,             // y座標
+        x: 320+175*j-175,             // x座標
+        y: 480-175*i+175,             // y座標
         width: 160,         // 横サイズ
         height: 160,        // 縦サイズ
-        text: "OK",     // 表示文字
-        fontSize: 48,       // 文字サイズ
-        fontColor: 'red', // 文字色
-        cornerRadius: 10,   // 角丸み
-        fill: "lightsalmon",    // ボタン色
-        stroke: 'red',     // 枠色
-        strokeWidth: 5,     // 枠太さ
-      }).addChildTo(piecegroup)
-      .onpointstart = function() {
-
-        SoundManager.stopMusic("timer");
-
-        clearInterval(countdown);
-        self.exit("result");
-
-      };
-
-      //ボタンBACK
-      var button = Button({
-        x: 320-175,             // x座標
-        y: 480+350,             // y座標
-        width: 160,         // 横サイズ
-        height: 160,        // 縦サイズ
-        text: "←",     // 表示文字
-        fontSize: 48,       // 文字サイズ
-        fontColor: 'black', // 文字色
-        cornerRadius: 10,   // 角丸み
-        fill: 'lightgray',    // ボタン色
-        stroke: 'black',     // 枠色
-        strokeWidth: 5,     // 枠太さ
-      }).addChildTo(piecegroup)
-      .onpointstart = function() {
-        SoundManager.play("button");
-        if(input < 10){input = 0;}
-        else{input = Math.floor(input * 0.1);}
-        label.text = input;
-      };
-
-      //ボタン0
-      var button = Button({
-        x: 320,             // x座標
-        y: 480+350,             // y座標
-        width: 160,         // 横サイズ
-        height: 160,        // 縦サイズ
-        text: 0,     // 表示文字
+        text: n+1,     // 表示文字
         fontSize: 48,       // 文字サイズ
         fontColor: 'blue', // 文字色
         cornerRadius: 10,   // 角丸み
@@ -526,56 +564,25 @@ phina.define('Main', {
         else{input = input * 10 + this.text;}
         label.text = input;
 
+        console.log(input);
       };
+    }
 
-      //ボタン1-9
-      for(var n=0;n<9;n++){
-        var i= Math.floor(n/3);
-        var j= n%3;
-        var button = Button({
-          x: 320+175*j-175,             // x座標
-          y: 480-175*i+175,             // y座標
-          width: 160,         // 横サイズ
-          height: 160,        // 縦サイズ
-          text: n+1,     // 表示文字
-          fontSize: 48,       // 文字サイズ
-          fontColor: 'blue', // 文字色
-          cornerRadius: 10,   // 角丸み
-          fill: 'skyblue',    // ボタン色
-          stroke: 'blue',     // 枠色
-          strokeWidth: 5,     // 枠太さ
-        }).addChildTo(piecegroup)
-        .onpointstart = function() {
-          SoundManager.play("button");
-          if(input==0){input=this.text;}
-          else{input = input * 10 + this.text;}
-          label.text = input;
+    gauge2.update = function(){
+      gauge2.value --;
+    };
 
-          console.log(input);
-        };
-      }
-
-
-      gauge2.update = function(){
-        gauge2.value --;
-      };
-
-      gauge2.onempty = function(){
-        clearInterval(countdown);
-        input = -1;
-        SoundManager.stopMusic("timer");
-        self.exit("result");
-      };
+    gauge2.onempty = function(){
+      clearInterval(countdown);
+      input = -1;
+      SoundManager.stopMusic("timer");
+      self.exit("result");
+    };
 
 
 
-    },
-
-    /*
-    onpointstart: function() {
-    this.exit();
   },
-  */
+
 });
 
 // Result クラスを定義
