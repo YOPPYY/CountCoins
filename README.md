@@ -1,3 +1,4 @@
 # CountCoins
 https://yoppyy.github.io/CountCoins/
-phina.js
+
+2021/02/18 v1.0
