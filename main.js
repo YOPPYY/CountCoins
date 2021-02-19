@@ -124,14 +124,14 @@ phina.define('Title', {
     for(let i in coins){
       var coin = Sprite(coins[i])
       .addChildTo(this)
-      .setPosition(this.gridX.center()-250+100*i, this.gridY.center()-200)
+      .setPosition(this.gridX.center()-250+100*i, this.gridY.center()-175)
       .setScale(0.2);
     }
 
     for(let i in coins){
       var coin = Sprite(coins[i])
       .addChildTo(this)
-      .setPosition(this.gridX.center()+250-100*i, this.gridY.center()+200)
+      .setPosition(this.gridX.center()+250-100*i, this.gridY.center()+175)
       .setScale(0.2);
     }
 
