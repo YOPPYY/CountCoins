@@ -7,8 +7,8 @@ var SCREEN_HEIGHT = 960;
 var x=[];
 var y=[];
 
-var coins =["coin1","coin5","coin10","coin50","coin100","coin500"];
-var price =[1,5,10,50,100,500];
+var coins =["coin1","coin5","coin50","coin100","coin10","coin500"];
+var price =[1,5,50,100,10,500];
 
 var ans=0;
 var time=0;
