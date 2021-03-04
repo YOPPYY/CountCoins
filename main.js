@@ -362,9 +362,9 @@ phina.define('Main', {
       if(how.alpha>0){
         how.alpha = how.alpha- 0.03;
       }
-            if(how.alpha<=0){
-              how.alpha=0;
-            }
+      if(how.alpha<=0){
+        how.alpha=0;
+      }
     }
 
 
@@ -392,9 +392,9 @@ var group = DisplayElement().addChildTo(this);
 
 for(var i=0; i<level; i++){
   var r = Math.floor( Math.random() * coins.length );
-
   val.push(r);
 }
+
 val.sort();
 val.reverse();
 
